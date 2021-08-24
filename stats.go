@@ -10,7 +10,17 @@ import (
 	"go.k6.io/k6/stats"
 )
 
-func countError(ctx context.Context) error {
+var (
+	DialCount = stats.New("dns.dial.count", stats.Counter)
+	DialError = stats.New("dns.dial.error", stats.Counter)
+
+	RequestCount = stats.New("dns.request.count", stats.Counter)
+	RequestError = stats.New("dns.request.error", stats.Counter)
+
+	ResponseTime = stats.New("dns.response.time", stats.Trend, stats.Time)
+)
+
+func reportDial(ctx context.Context) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
@@ -18,7 +28,7 @@ func countError(ctx context.Context) error {
 
 	now := time.Now()
 	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
-		Metric: stats.New("dns.error.count", stats.Counter),
+		Metric: DialCount,
 		Time:   now,
 		Value:  float64(1),
 	})
@@ -26,7 +36,7 @@ func countError(ctx context.Context) error {
 	return nil
 }
 
-func countDial(ctx context.Context) error {
+func reportDialError(ctx context.Context) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
@@ -34,7 +44,7 @@ func countDial(ctx context.Context) error {
 
 	now := time.Now()
 	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
-		Metric: stats.New("dns.dial.count", stats.Counter),
+		Metric: DialError,
 		Time:   now,
 		Value:  float64(1),
 	})
@@ -42,7 +52,7 @@ func countDial(ctx context.Context) error {
 	return nil
 }
 
-func countRequest(ctx context.Context) error {
+func reportRequest(ctx context.Context) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
@@ -50,7 +60,7 @@ func countRequest(ctx context.Context) error {
 
 	now := time.Now()
 	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
-		Metric: stats.New("dns.request.count", stats.Counter),
+		Metric: RequestCount,
 		Time:   now,
 		Value:  float64(1),
 	})
@@ -58,7 +68,7 @@ func countRequest(ctx context.Context) error {
 	return nil
 }
 
-func countResponseRTT(ctx context.Context, rtt time.Duration) error {
+func reportRequestError(ctx context.Context) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
@@ -66,7 +76,23 @@ func countResponseRTT(ctx context.Context, rtt time.Duration) error {
 
 	now := time.Now()
 	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
-		Metric: stats.New("dns.response.rtt", stats.Trend, stats.Time),
+		Metric: RequestError,
+		Time:   now,
+		Value:  float64(1),
+	})
+
+	return nil
+}
+
+func reportResponseTime(ctx context.Context, rtt time.Duration) error {
+	state := lib.GetState(ctx)
+	if state == nil {
+		return fmt.Errorf("state is nil")
+	}
+
+	now := time.Now()
+	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
+		Metric: ResponseTime,
 		Time:   now,
 		Value:  float64(rtt.Milliseconds()),
 	})
@@ -74,7 +100,7 @@ func countResponseRTT(ctx context.Context, rtt time.Duration) error {
 	return nil
 }
 
-func countDataSent(ctx context.Context, value float64) error {
+func reportDataSent(ctx context.Context, value float64) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
@@ -90,7 +116,7 @@ func countDataSent(ctx context.Context, value float64) error {
 	return nil
 }
 
-func countDataReceived(ctx context.Context, value float64) error {
+func reportDataReceived(ctx context.Context, value float64) error {
 	state := lib.GetState(ctx)
 	if state == nil {
 		return fmt.Errorf("state is nil")
