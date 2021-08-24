@@ -68,7 +68,7 @@ func (k *K6DNS) Resolve(ctx context.Context, addr, query, qtypeStr string) (stri
 	conn, err := NewK6UDPConn(addr)
 	if err != nil {
 		reportDialError(ctx)
-		return "", err
+		return err.Error(), nil
 	}
 	defer func() {
 		conn.Close()
@@ -80,7 +80,7 @@ func (k *K6DNS) Resolve(ctx context.Context, addr, query, qtypeStr string) (stri
 	resp, rtt, err := k.client.ExchangeWithConn(msg, &dns.Conn{Conn: conn})
 	if err != nil {
 		reportRequestError(ctx)
-		return "", err
+		return err.Error(), nil
 	}
 	reportResponseTime(ctx, rtt)
 
