@@ -64,24 +64,25 @@ func (k *K6DNS) Resolve(ctx context.Context, addr, query, qtypeStr string) (stri
 		Qclass: dns.ClassINET,
 	}
 
-	countDial(ctx)
+	reportDial(ctx)
 	conn, err := NewK6UDPConn(addr)
 	if err != nil {
+		reportDialError(ctx)
 		return "", err
 	}
 	defer func() {
 		conn.Close()
-		countDataReceived(ctx, float64(conn.rxBytes))
-		countDataSent(ctx, float64(conn.txBytes))
+		reportDataReceived(ctx, float64(conn.rxBytes))
+		reportDataSent(ctx, float64(conn.txBytes))
 	}()
 
-	countRequest(ctx)
+	reportRequest(ctx)
 	resp, rtt, err := k.client.ExchangeWithConn(msg, &dns.Conn{Conn: conn})
 	if err != nil {
-		countError(ctx)
+		reportRequestError(ctx)
 		return "", err
 	}
-	countResponseRTT(ctx, rtt)
+	reportResponseTime(ctx, rtt)
 
 	return resp.String(), nil
 }
